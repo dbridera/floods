@@ -95,9 +95,9 @@ class ChangeImage(object):
 		res = vfun(matrix)
 		return res
 
-	def initial(self):
+	def initial(self,alpha):
 		
-		self.getLimits()
+		self.getLimits(alpha)
 		m_n, sigma_n = getInitialParams(self.ros,self.tn, lower=True)
 		m_c, sigma_c = getInitialParams(self.ros,self.tc)
 
@@ -138,12 +138,27 @@ t.imageDiff(source='ndi')
 t.getMagnitudeMatrix()
 t.getAlphaMatrix()
 t.fixRos()
-t.getLimits(0.4)
+t.getLimits(0.03)
+
+print "Max ro \t\tMin ro \t\tMedia ro \t\tPromedio ro"
+print t.ros.max(), t.ros.min(), (t.ros.max()-t.ros.min())/2, np.mean(t.ros)
+print "Threshold tn , Threshold tc"
+print t.tn,t.tc
+
 mu_c, sigma_c = getInitialParams(t.ros, t.tc)
+mu_nc, sigma_nc = getInitialParams(t.ros, t.tn,lower=True)
 
-print t.tn, t.tc
+print "Mu c , sigma c"
+print mu_c, sigma_c
+print "Mu nc , sigma nc"
+print mu_nc, sigma_nc
+print "\n"
+print "Compute ratio"
 
-print t.bands, t.x, t.y
+Pn_Pxn_Px , Pc_Pxc_Px = t.computeRatio(0.3, 0.7, mu_c, sigma_c, mu_nc, sigma_nc)
+
+print Pn_Pxn_Px , Pc_Pxc_Px
+
 """
 t.imageDiff(source='ndi')
 
