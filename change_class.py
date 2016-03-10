@@ -119,18 +119,19 @@ class ChangeImage(object):
 		denominator = (self.x * self.y)
 		return np.sum(ratioPn)/denominator, np.sum(ratioPc)/denominator
 
-	def equation2(self,ratioPn, ratioPc,Pc, Pnc, mu_c, sigma_c, mu_nc, sigma_nc):
-		num_n = np.sum(ratioPn * ros)
-		num_c = np.sum(ratioPc * ros)
+	def equation2(self,ratioPn, ratioPc):
+		num_n = np.sum(ratioPn * self.ros)
+		num_c = np.sum(ratioPc * self.ros)
 
 		return num_n/np.sum(ratioPn), num_c/np.sum(ratioPc)
 
-	def equation3(self,ratioPn, ratioPc,Pc, Pnc, mu_c, sigma_c, mu_nc, sigma_nc):
-		num_n = np.sum(ratioPn * ((ros - mu_n)**2))
-		num_c = np.sum(ratioPc * ((ros - mu_c)**2))
+	def equation3(self,ratioPn, ratioPc, mu_nc,  mu_c):
+		num_n = np.sum(ratioPn * ((self.ros - mu_nc)**2))
+		num_c = np.sum(ratioPc * ((self.ros - mu_c)**2))
 
 		return num_n/np.sum(ratioPn), num_c/np.sum(ratioPc)
 
+start_time = time.clock()
 
 t = ChangeImage("img/recorte1","img/recorte2")
 t.load()
@@ -139,25 +140,39 @@ t.getMagnitudeMatrix()
 t.getAlphaMatrix()
 t.fixRos()
 t.getLimits(0.03)
-
-print "Max ro \t\tMin ro \t\tMedia ro \t\tPromedio ro"
-print t.ros.max(), t.ros.min(), (t.ros.max()-t.ros.min())/2, np.mean(t.ros)
-print "Threshold tn , Threshold tc"
-print t.tn,t.tc
+t.ros = t.ros.flatten()
 
 mu_c, sigma_c = getInitialParams(t.ros, t.tc)
 mu_nc, sigma_nc = getInitialParams(t.ros, t.tn,lower=True)
 
-print "Mu c , sigma c"
-print mu_c, sigma_c
-print "Mu nc , sigma nc"
-print mu_nc, sigma_nc
-print "\n"
 print "Compute ratio"
 
-Pn_Pxn_Px , Pc_Pxc_Px = t.computeRatio(0.3, 0.7, mu_c, sigma_c, mu_nc, sigma_nc)
+#t.ros = t.ros.flatten()
+print time.clock()-start_time
 
-print Pn_Pxn_Px , Pc_Pxc_Px
+start_time = time.clock()
+
+
+pn ,pc  =  0.5, 0.5
+
+for i in range(10):
+
+	if i!=0:
+		sigma_c , sigma_nc = sqrt(sigma_c) , sqrt(sigma_nc)
+
+	Pn_Pxn_Px , Pc_Pxc_Px = t.computeRatio(pc, pn, mu_c, sigma_c, mu_nc, sigma_nc)
+	pn, pc =  t.equation1(Pn_Pxn_Px, Pc_Pxc_Px)
+	mu_nc, mu_c = t.equation2(Pn_Pxn_Px, Pc_Pxc_Px)
+	sigma_nc, sigma_c = t.equation3(Pn_Pxn_Px, Pc_Pxc_Px, mu_nc, mu_c)
+
+	print (pn,pc)
+	print (mu_nc, mu_c)
+	print (sigma_nc, sigma_c)
+
+
+print time.clock()-start_time
+
+
 
 """
 t.imageDiff(source='ndi')
