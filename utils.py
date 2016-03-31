@@ -3,6 +3,9 @@ from itertools import product
 from math import sqrt,log, pow
 from itertools import combinations
 from scipy.stats import norm
+from osgeo import gdal, gdal_array
+import matplotlib.pyplot as plt
+
 
 def getSCVS(numpyArray, posX, posY):
 	"""
@@ -103,12 +106,19 @@ def computeRoots(mu_n, mu_c, var_n, var_c, Pn, Pc):
 	expr = (b**2) - (4*a*c)  
 	denominator = 2*a
 
-	if expr>0:
+	if expr>=0:
 		return (-b - sqrt(expr))/denominator , (-b + sqrt(expr))/denominator
 	else:
 		print "No hay raices reales"
 
 #print computeRoots(0.081996954703117797, 0.29743607003638306,0.00032570313937767557, 0.0011796231862130817,0.45565179421797364, 0.54434820578202647)
+
+def histogram(array, bins):
+	plt.hist(array, bins=bins)
+	plt.show()
+
+def saveTiff(array, name, source):
+	gdal_array.SaveArray(array.astype("int"), name, "GTiff", gdal.Open(source))
 
 def test():
 	""" Matrix examples	"""
