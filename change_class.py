@@ -25,6 +25,12 @@ class ChangeImage(object):
 		self.imgBef = gdal.Open(self.imgBef).ReadAsArray().astype('float')
 		self.imgAft = gdal.Open(self.imgAft).ReadAsArray().astype('float')
 
+		nozero = self.imgBef[np.where(self.imgBef !=0)]
+		self.imgBef[np.where(self.imgBef ==0)]= nozero.min()
+		
+		nozero = self.imgAft[np.where(self.imgAft !=0)]
+		self.imgAft[np.where(self.imgAft ==0)]= nozero.min()
+
 		self.bands , self.x, self.y = self.imgAft.shape
 		self.coef = sqrt(factorial(self.bands)/ (2* factorial(self.bands - 2)))
 	def getNDIs(self, matrix):
@@ -42,10 +48,8 @@ class ChangeImage(object):
 
 			img1 = matrix[b1,:,:]
 			img2 = matrix[b2,:,:]
-			#with np.errstate(invalid='ignore',divide='ignore'):
 			res[i,:,:]= (img1 - img2) / (img1 + img2)
 
-		#res[~np.isfinite(res)]= 0
 
 		return res
 
@@ -71,8 +75,6 @@ class ChangeImage(object):
 	def getAlphaMatrix(self):
 
 		numerator = np.sum(self.diff, axis=0)
-		#coef = sqrt(factorial(self.bands)/ (2* factorial(self.bands - 2)))
-		#with np.errstate(invalid='ignore',divide='ignore'):
 		self.alpha = numerator/ (self.coef * self.ros)
 
 	def getLimits(self, alpha):
@@ -105,8 +107,8 @@ class ChangeImage(object):
 		return m_n, sigma_n, m_c, sigma_c
 
 	def computeRatio(self,Pc, Pnc, mu_c, sigma_c, mu_nc, sigma_nc):
-		Pxn = pdf(self.ros, mu_nc, sigma_nc)
-		Pxc = pdf(self.ros, mu_c, sigma_c)
+		Pxn = self.pdf(self.ros, mu_nc, sigma_nc)
+		Pxc = self.pdf(self.ros, mu_c, sigma_c)
 
 		Pn_Pxn =Pnc * Pxn
 		Pc_Pxc = Pc* Pxc
