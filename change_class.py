@@ -2,10 +2,11 @@ from osgeo import gdal, gdal_array
 import numpy as np
 from utils import *
 from scipy.stats import norm
-from math import cos, sin , sqrt, factorial
+from math import cos, sin , sqrt, factorial, pi, radians
 import time
 import matplotlib.pyplot as plt
 
+from calibration.parser import BAND_MAP, getMetadata, earthSunDistance
 
 class ChangeImage(object):
 
@@ -33,6 +34,7 @@ class ChangeImage(object):
 
 		self.bands , self.x, self.y = self.imgAft.shape
 		self.coef = sqrt(factorial(self.bands)/ (2* factorial(self.bands - 2)))
+
 	def getNDIs(self, matrix):
 
 		to_combine = combinations(range(self.bands),2)
@@ -50,10 +52,21 @@ class ChangeImage(object):
 			img2 = matrix[b2,:,:]
 			res[i,:,:]= (img1 - img2) / (img1 + img2)
 
-
 		return res
 
-	def imageDiff(self, source='origin'):
+	def selectedNDI(self, matrix, combinatios):
+
+		res = np.empty([len(combinatios), self.x , self.y])
+
+		for i, (b1, b2) in enumerate(combinatios):
+
+			img1 = matrix[b1,:,:]
+			img2 = matrix[b2,:,:]
+			res[i,:,:]= (img1 - img2) / (img1 + img2)
+		
+		return res
+
+	def imageDiff(self, source='origin', combinations=None):
 		"""
 		Compute the image difference.
 		The result type depends on parameteers type.
@@ -64,6 +77,50 @@ class ChangeImage(object):
 			self.diff = self.getNDIs(self.imgAft) - self.getNDIs(self.imgBef)
 			self.bands , self.x, self.y = self.diff.shape
 			self.coef = sqrt(self.bands)
+		elif source == 'combinations':
+			self.diff = self.selectedNDI(self.imgAft, combinations) - self.selectedNDI(self.imgBef, combinations)
+			self.bands , self.x, self.y = self.diff.shape
+			self.coef = sqrt(len(combinations))
+
+
+
+	def calibrate(self, metaFile):
+		data = getMetadata(metaFile)
+		print data
+		date = data['date']
+
+		sunDist = earthSunDistance(date)
+		tita_s = radians(90 - data['sunEl'])
+
+		for b_number, b_name in BAND_MAP:
+
+			band_digital = self.imgBef[int(b_number),:,:]
+			absFactor = data[b_name]['absCalFactor']
+			effBanw = data[b_name]['effectiveBandwidth']
+			self.imgBef[int(b_number),:,:] = (float(absFactor) * band_digital)/ float(effBanw)
+
+		for b_number, b_name in BAND_MAP:
+
+			band_radiance = self.imgBef[b_number,:,:]
+			esun = data[b_name]['solarirr']
+			
+			self.imgBef[b_number,:,:] = (pi * band_radiance * (sunDist**2) )/ (esun * cos(2*tita_s))
+
+
+		for b_number, b_name in BAND_MAP:
+
+			band_digital = self.imgAft[int(b_number),:,:]
+			absFactor = data[b_name]['absCalFactor']
+			effBanw = data[b_name]['effectiveBandwidth']
+			self.imgAft[int(b_number),:,:] = (float(absFactor) * band_digital)/ float(effBanw)
+
+		for b_number, b_name in BAND_MAP:
+
+			band_radiance = self.imgAft[b_number,:,:]
+			esun = data[b_name]['solarirr']
+			
+			self.imgAft[b_number,:,:] = (pi * band_radiance * (sunDist**2) )/ (esun * cos(2*tita_s))
+
 
 	def getMagnitudeMatrix(self):
 		pre = self.diff**2

@@ -2,7 +2,18 @@ import re
 from dateutil import parser
 from astropy.time import Time
 import time
-from math import cos, radians
+from math import cos, radians, pi
+
+BAND_MAP = [
+(0, 'BAND_C'),
+(1, 'BAND_B'),
+(2, 'BAND_G'),
+(3, 'BAND_Y'),
+(4, 'BAND_R'),
+(5, 'BAND_RE'),
+(6, 'BAND_N'),
+(7, 'BAND_N2')
+]
 
 SOLAR_SPECTRAL_IRRADIANCE = {
 'BAND_C' : 1758.2229,
@@ -28,7 +39,7 @@ def getMetadata(file):
 	sunEl = re.search('meanSunEl =\s*(.+);', lines).group(1)
 
 	data['date'] = date
-	data['sunEl'] = sunEl
+	data['sunEl'] = float(sunEl)
 
 	res = re.finditer(pattern, lines)
 
@@ -52,17 +63,41 @@ def earthSunDistance(date):
 	# Julian day
 	
 	jd = t.jd
-	
-	print jd
-	
 	d = jd - 2451545.0
-	print d
 	
 	g = radians( 357.529 + (0.98560028 * d))
 	
 	distance = 1.00014 - 0.01671  * cos(g) - 0.00014 * cos(2* g)
 
 	return distance
-	
+
+def calibrate(metaFile, img):
+
+	# TODO: check image shape (q-.-)q
+
+	data = getMetadata(metaFile)
+
+	date = data['date']
+
+	sunDist = earthSunDistance(date)
+
+	tita_s = radians(90 - data['sunEl'])
+
+	for b_name, b_number in BAND_MAP:
+
+		band_digital = img[b_number,:,:]
+		absFactor = data[b_name]['absCalFactor']
+		effBanw = data[b_name]['effectiveBandwidth']
+		img[b_number,:,:] = (absFactor * band_digital)/ effBanw 
+
+	for b_name, b_number in BAND_MAP:
+
+		band_radiance = img[b_number,:,:]
+		esun = data[b_name]['solarirr']
+		
+		img[b_number,:,:] = (pi * band_radiance * (sunDist**2) )/ (esun * cos(2*tita_s)) 
+
+
 if __name__ == '__main__':
 	print earthSunDistance('2009-10-08T18:51:00.000000Z')
+
