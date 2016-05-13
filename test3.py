@@ -1,45 +1,31 @@
 from change_class import *
 import sys
-
 # Define images to use
-img1 = "/home/daniel/floods/WORDVIEW/recorte"
-img2 = "/home/daniel/floods/TEST/wv_ruido_mix"
+img1 = "/home/daniel/floods/l8/sample1_before"
+img2 = "/home/daniel/floods/l8/sample1_after"
 
 # Create object
-t = ChangeImage(img1,img2)
-# Load and create imag diff using NDI vectors
 
+t = ChangeImage(img1,img2)
+
+# Load and create imag diff using NDI vectors
 t.load()
 
-print t.imgBef.shape
-
-for i in range(0,8):
-	print t.imgBef[i,:,:].max(), t.imgBef[i,:,:].min()
-
-t.calibrate('tex.imd')
-
-print "-----------------"
-
-for i in range(0,8):
-	print t.imgBef[i,:,:].max(), t.imgBef[i,:,:].min()
-
-#combinations = [(6,4),(7,5),(0,7),(1,0),(2,7),(6,5),(2,3)]
 t.imageDiff(source='ndi')
 
 # Create matrix of ROS and ALPHAS
 t.getMagnitudeMatrix()
-
 nozero = t.ros[np.where(t.ros !=0)]
-t.ros[np.where(t.ros == 0)]= nozero.min()
+t.ros[np.where(t.ros ==0)]= nozero.min()
 #t.getAlphaMatrix()
 
 t.fixRos()
 
 """
-t.ros[np.where(t.ros>=0.021913564571751486)] = 1
-t.ros[np.where(t.ros<0.021913564571751486)] = 0
+t.ros[np.where(t.ros>=0.07007667413584022)] = 1
+t.ros[np.where(t.ros<0.07007667413584022)] = None
 
-saveTiff(t.ros, "cambaiadometodo", img1)
+saveTiff(t.ros, "l8/resultados/sample6", img1)
 exit()
 """
 
@@ -47,7 +33,7 @@ print "ROS extremos"
 print t.ros.min(), t.ros.max()
 
 print "Medio"
-print (-t.ros.min() + t.ros.max())/2.
+print (-t.ros.min() + t.ros.max())/2
 
 #line = sys.stdin.readline()
 alpha = raw_input("Defined ALPHA: ")
@@ -66,11 +52,16 @@ mu_nc, sigma_nc = getInitialParams(t.ros, t.tn,lower=True)
 pnorig, pcorig  = 1 , 1
 mnorig, mcorig  = 1 , 1
 snorig, scorig  = 1 , 1
-pn ,pc  =  0.80, 0.20
+pn ,pc  =  0.68359318882172837, 0.3164061117827169
+mu_nc = 0.065044686302178578
+mu_c = 0.15246536667231769
+sigma_nc = 0.00073523422023898382
+sigma_c = 0.0042433410739568514
+
 print "PNO-CHANGE = %f, PCHANGE = %f" % (pn ,pc)
 
 
-for i in range(100):
+for i in range(3000):
 	if (pcorig == pc and pnorig == pn and mcorig == mu_c and mnorig == mu_nc and scorig == sigma_c and snorig == sigma_nc):
 		break
 	
@@ -83,8 +74,8 @@ for i in range(100):
 	scorig = sigma_c
 	snorig = sigma_nc
 
-	if i!=0:
-		sigma_c , sigma_nc = sqrt(sigma_c) , sqrt(sigma_nc)
+	
+	sigma_c , sigma_nc = sqrt(sigma_c) , sqrt(sigma_nc)
 
 	Pn_Pxn_Px , Pc_Pxc_Px = t.computeRatio(pc, pn, mu_c, sigma_c, mu_nc, sigma_nc)
 	mu_c_orig,mu_nc_orig  =  mu_c , mu_nc
@@ -104,7 +95,6 @@ print "Roots"
 print computeRoots(mu_nc,mu_c,sigma_nc,sigma_c,pn,pc)
 
 bins = [0,0.1,0.2,0.3,0.4,0.5,0.6]
-
 histogram(t.ros,bins)
 
 """

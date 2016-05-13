@@ -1,6 +1,6 @@
 ENVI
 description = {
-  variable imported from IDL command line [Wed Mar 23 16:14:08 2016]}
+  variable imported from IDL command line [Thu Mar 31 13:11:47 2016]}
 samples = 400
 lines   = 400
 bands   = 7
