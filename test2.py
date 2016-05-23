@@ -1,8 +1,8 @@
 from change_class import *
 import sys
 # Define images to use
-img1 = "/home/daniel/floods/l8/sample2_before"
-img2 = "/home/daniel/floods/l8/sample2_after"
+img1 = "/home/daniel/floods/l8/filtrados/sample1_before_filtrado"
+img2 = "/home/daniel/floods/l8/filtrados/sample1_after_filtrado"
 
 # Create object
 
@@ -20,14 +20,14 @@ t.ros[np.where(t.ros ==0)]= nozero.min()
 #t.getAlphaMatrix()
 
 t.fixRos()
-
 """
-t.ros[np.where(t.ros>=0.07007667413584022)] = 1
-t.ros[np.where(t.ros<0.07007667413584022)] = None
+t.ros[np.where(t.ros>=0.0055276406456084949)] = 1
+t.ros[np.where(t.ros<0.0055276406456084949)] = None
 
-saveTiff(t.ros, "l8/resultados/sample6", img1)
+saveTiff(t.ros, "l8/filtrados/sample1_cambios", img1)
 exit()
 """
+
 
 print "ROS extremos"
 print t.ros.min(), t.ros.max()
@@ -103,8 +103,8 @@ ros = t.ros[np.where(t.ros >=0.10693342490619757)]
 x = ros * cos
 y = ros * np.sin(alphas)
 
-#print x
-#print y
+#print x.flatten()
+#print y.flatten()
 
 cambios = np.vstack((x, y)).T
 

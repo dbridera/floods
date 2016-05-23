@@ -106,12 +106,13 @@ class ChangeImage(object):
 
         if source == 'origin':
             self.diff = self.imgAft - self.imgBef
+        
         elif source == 'ndi':
             self.diff = self.getNDIs(self.imgAft) - self.getNDIs(self.imgBef)
             self.bands, self.x, self.y = self.diff.shape
             self.coef = sqrt(self.bands)
+        
         elif source == 'combinations':
-
             self.diff = self.selectedNDI(self.imgAft, combinations) - \
                 self.selectedNDI(self.imgBef, combinations)
             self.bands, self.x, self.y = self.diff.shape

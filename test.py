@@ -2,8 +2,8 @@ from change_class import *
 import sys
 
 # Define images to use
-img1 = "/home/daniel/floods/WORDVIEW/recorte"
-img2 = "/home/daniel/floods/TEST/wv_ruido_mix"
+img1 = "/home/daniel/floods/l8/sample1_before"
+img2 = "/home/daniel/floods/l8/sample1_after"
 
 # Create object
 t = ChangeImage(img1,img2)
@@ -11,17 +11,7 @@ t = ChangeImage(img1,img2)
 
 t.load()
 
-print t.imgBef.shape
-
-for i in range(0,8):
-	print t.imgBef[i,:,:].max(), t.imgBef[i,:,:].min()
-
-t.calibrate('tex.imd')
-
-print "-----------------"
-
-for i in range(0,8):
-	print t.imgBef[i,:,:].max(), t.imgBef[i,:,:].min()
+#t.calibrate('tex.imd')
 
 #combinations = [(6,4),(7,5),(0,7),(1,0),(2,7),(6,5),(2,3)]
 t.imageDiff(source='ndi')
@@ -31,7 +21,7 @@ t.getMagnitudeMatrix()
 
 nozero = t.ros[np.where(t.ros !=0)]
 t.ros[np.where(t.ros == 0)]= nozero.min()
-#t.getAlphaMatrix()
+t.getAlphaMatrix()
 
 t.fixRos()
 
@@ -39,8 +29,8 @@ t.fixRos()
 t.ros[np.where(t.ros>=0.021913564571751486)] = 1
 t.ros[np.where(t.ros<0.021913564571751486)] = 0
 
-saveTiff(t.ros, "cambaiadometodo", img1)
-exit()
+saveTiff(t.ros, "ros2", img1)
+
 """
 
 print "ROS extremos"
@@ -110,29 +100,50 @@ histogram(t.ros,bins)
 """
 alphas = t.alpha[np.where(t.ros >=0.10693342490619757)]
 
-cos = alphas
 
-alphas = np.arccos(alphas)
-ros = t.ros[np.where(t.ros >=0.10693342490619757)]
+cos = t.alpha
 
-x = ros * cos
-y = ros * np.sin(alphas)
+alphas = np.arccos(t.alpha)
+#ros = t.ros[np.where(t.ros >=0.10693342490619757)]
 
-#print x
-#print y
+x = t.ros * cos
+y = t.ros * np.sin(alphas)
 
-cambios = np.vstack((x, y)).T
+p = x.flatten()
 
-#print cambios
 
+cambios = np.vstack((x.flatten(), y.flatten())).T
 
 from sklearn.cluster import MeanShift, estimate_bandwidth
 
 ms = MeanShift(bandwidth=0.03)
-X = cambios
+rows, col = cambios.shape
+
+print cambios.shape
+
+X = cambios[:int(rows*0.7),:]
 #print X
 ms.fit(X)
+
+print "termino fit"
+
 labels = ms.labels_
+
+clus = ms.predict(cambios)
+print "termino predecir"
+print "shape"
+
+pa = clus.reshape(400,400)
+
+saveTiff(t.ros, "ros", img1)
+saveTiff(pa, "class", img1)
+
+
+print clus.reshape(2,1000)
+
+
+exit()
+
 cluster_centers = ms.cluster_centers_
 print cluster_centers
 
@@ -159,9 +170,8 @@ for k, col in zip(range(n_clusters_), colors):
              markeredgecolor='k', markersize=14)
 plt.title('Estimated number of clusters: %d' % n_clusters_)
 plt.show()
-"""
 
-"""
+
 t.alpha[np.where(t.alpha > 0.775)] = 200
 t.alpha[np.where(t.alpha <= 0.775)] = 100
 t.alpha[np.where(t.ros < 0.10693342490619757)] = 0
@@ -171,11 +181,10 @@ t.alpha= t.alpha/100
 gdal_array.SaveArray(t.alpha.astype("int"), "SUELO/clasificada_AGUA_AGUA", "GTiff", gdal.Open(img1))
 
 exit()
-"""
-"""
+
 #t.getAlphaMatrix()
 #print t.ros[120:190,120:190]
 #print ""
 #print t.ros[300:399,300:399]
 """
-exit()
+#exit()

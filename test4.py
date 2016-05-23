@@ -1,8 +1,8 @@
 from change_class import *
 import sys
 # Define images to use
-img1 = "/home/daniel/floods/l8/sample2_before"
-img2 = "/home/daniel/floods/l8/sample2_after"
+img1 = "/home/daniel/floods/l8/sample1_before"
+img2 = "/home/daniel/floods/l8/sample1_after"
 
 # Create object
 
@@ -20,12 +20,16 @@ t.ros[np.where(t.ros ==0)]= nozero.min()
 #t.getAlphaMatrix()
 
 t.fixRos()
-
 """
-t.ros[np.where(t.ros>=0.07007667413584022)] = 1
-t.ros[np.where(t.ros<0.07007667413584022)] = None
+bins = [0,0.1,0.2,0.3,0.4,0.5,0.6]
+histogram(t.ros,bins)
 
-saveTiff(t.ros, "l8/resultados/sample6", img1)
+
+t.ros[np.where(t.ros>=0.074154850008008491)] = 1
+t.ros[np.where(t.ros<0.074154850008008491)] = None
+
+saveTiff(t.ros, "l8/resultados/sample2", img1)
+
 exit()
 """
 
@@ -55,11 +59,11 @@ snorig, scorig  = 1 , 1
 pn ,pc  =  0.7, 0.3
 
 
-pn ,pc  =  0.45538529712593429, 0.54461470287406566
-mu_nc = 0.049177994127910248
-mu_c = 0.10929218921267508
-sigma_nc = 0.00027321169119764706
-sigma_c = 0.0023613317927471847
+pn ,pc  =  0.68394363007749093, 0.3160563699225088
+mu_nc = 0.065059819923759518
+mu_c = 0.15252954911209346
+sigma_nc = 0.00073589350193276309
+sigma_c = 0.0042430516520920586
 
 print "PNO-CHANGE = %f, PCHANGE = %f" % (pn ,pc)
 
