@@ -193,14 +193,14 @@ class ChangeImage(object):
         numerator = np.sum(self.diff, axis=0)
         self.alpha = numerator / (self.coef * self.ros)
 
-    def getLimits(self, alpha):
+    def getLimits(self, middle, alpha):
 
         """
             Get initial limits for classes
 
         """
 
-        middle = (self.ros.max() - self.ros.min()) / 2
+        #middle = (self.ros.max() - self.ros.min()) / 2
         self.tn, self.tc = middle - alpha, middle + alpha
 
     def getInitialParams(self, numpyArray, t, lower=False):
@@ -304,5 +304,68 @@ class ChangeImage(object):
 
         num_n = np.sum(ratioPn * ((self.ros - mu_nc) ** 2))
         num_c = np.sum(ratioPc * ((self.ros - mu_c) ** 2))
+
+        return num_n / np.sum(ratioPn), num_c / np.sum(ratioPc)
+
+    def computeRatio_aux(self,ros, Pc, Pnc, mu_c, sigma_c, mu_nc, sigma_nc):
+
+        """
+            Perform ratio, useful for equations
+
+        """
+
+        Pxn = self.pdf(ros, mu_nc, sigma_nc)
+        Pxc = self.pdf(ros, mu_c, sigma_c)
+
+        Pn_Pxn = Pnc * Pxn
+        Pc_Pxc = Pc * Pxc
+
+        Px = Pn_Pxn + Pc_Pxc
+        ratio1 = Pn_Pxn / Px
+        ratio2 = Pc_Pxc / Px
+
+        """
+        with np.errstate(invalid='ignore',divide='ignore'):
+            ratio1 = Pn_Pxn/Px
+            ratio2 = Pc_Pxc/Px
+            ratio1[~np.isfinite(ratio1)] = 0
+            ratio2[~np.isfinite(ratio2)] = 0
+        """
+        return ratio1, ratio2
+
+    def equation1_aux(self, denominator, ratioPn, ratioPc):
+
+            """
+                Perform equation 1
+
+            """
+
+            # esto me viene, para no calcularlo de nuevo!!!
+            #newPn , newPc = computeRatio(Pc, Pnc, mu_c, sigma_c, mu_nc, sigma_nc)
+            #denominator = (self.x * self.y)
+            #denominator = 6262
+            return np.sum(ratioPn) / denominator, np.sum(ratioPc) / denominator
+
+    def equation2_aux(self, ros, ratioPn, ratioPc):
+
+        """
+            Perform equation 1
+
+        """
+
+        num_n = np.sum(ratioPn * ros)
+        num_c = np.sum(ratioPc * ros)
+
+        return num_n / np.sum(ratioPn), num_c / np.sum(ratioPc)
+
+    def equation3_aux(self, ros, ratioPn, ratioPc, mu_nc,  mu_c):
+
+        """
+            Perform equation 3
+
+        """
+
+        num_n = np.sum(ratioPn * ((ros - mu_nc) ** 2))
+        num_c = np.sum(ratioPc * ((ros - mu_c) ** 2))
 
         return num_n / np.sum(ratioPn), num_c / np.sum(ratioPc)

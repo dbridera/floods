@@ -15,38 +15,45 @@ t.imageDiff(source='ndi')
 
 # Create matrix of ROS and ALPHAS
 t.getMagnitudeMatrix()
-nozero = t.ros[np.where(t.ros !=0)]
-t.ros[np.where(t.ros ==0)]= nozero.min()
+#nozero = t.ros[np.where(t.ros !=0)]
+t.ros[np.where(t.ros ==0)]= -1
 #t.getAlphaMatrix()
 
 t.fixRos()
+
 """
-t.ros[np.where(t.ros>=0.0055276406456084949)] = 1
-t.ros[np.where(t.ros<0.0055276406456084949)] = None
+t.ros[np.where(t.ros>=0.13573749839952443)] = 1
+t.ros[np.where(t.ros<0.13573749839952443)] = None
 
 saveTiff(t.ros, "l8/filtrados/sample1_cambios", img1)
 exit()
 """
 
 
+flatt = t.ros[np.where(t.ros != t.ros.min())]
+
+
 print "ROS extremos"
-print t.ros.min(), t.ros.max()
+print flatt.min(), flatt.max()
 
 print "Medio"
-print (-t.ros.min() + t.ros.max())/2
+print (-flatt.min() + flatt.max())/2
 
 #line = sys.stdin.readline()
 alpha = raw_input("Defined ALPHA: ")
 print "Limits with ALPHA = " + alpha.strip()
 alpha = float(alpha.strip())
 
-t.getLimits(alpha)
+t.getLimits((-flatt.min() + flatt.max()/2), alpha)
 
 print t.tn, t.tc
 
+
+print flatt.shape
+
 # Start iterations to retrieve params
-mu_c, sigma_c = getInitialParams(t.ros, t.tc)
-mu_nc, sigma_nc = getInitialParams(t.ros, t.tn,lower=True)
+mu_c, sigma_c = getInitialParams(flatt, t.tc)
+mu_nc, sigma_nc = getInitialParams(flatt, t.tn,lower=True)
 
 
 pnorig, pcorig  = 1 , 1
@@ -56,7 +63,7 @@ pn ,pc  =  0.7, 0.3
 print "PNO-CHANGE = %f, PCHANGE = %f" % (pn ,pc)
 
 
-for i in range(300):
+for i in range(4000):
 	if (pcorig == pc and pnorig == pn and mcorig == mu_c and mnorig == mu_nc and scorig == sigma_c and snorig == sigma_nc):
 		break
 	
@@ -72,13 +79,13 @@ for i in range(300):
 	if i!=0:
 		sigma_c , sigma_nc = sqrt(sigma_c) , sqrt(sigma_nc)
 
-	Pn_Pxn_Px , Pc_Pxc_Px = t.computeRatio(pc, pn, mu_c, sigma_c, mu_nc, sigma_nc)
+	Pn_Pxn_Px , Pc_Pxc_Px = t.computeRatio_aux(flatt, pc, pn, mu_c, sigma_c, mu_nc, sigma_nc)
 	mu_c_orig,mu_nc_orig  =  mu_c , mu_nc
 
-	pn, pc =  t.equation1(Pn_Pxn_Px, Pc_Pxc_Px)
+	pn, pc =  t.equation1_aux(flatt.shape[0],Pn_Pxn_Px, Pc_Pxc_Px)
 
-	mu_nc, mu_c = t.equation2(Pn_Pxn_Px, Pc_Pxc_Px)
-	sigma_nc, sigma_c = t.equation3(Pn_Pxn_Px, Pc_Pxc_Px, mu_nc_orig, mu_c_orig)
+	mu_nc, mu_c = t.equation2_aux(flatt, Pn_Pxn_Px, Pc_Pxc_Px)
+	sigma_nc, sigma_c = t.equation3_aux(flatt, Pn_Pxn_Px, Pc_Pxc_Px, mu_nc_orig, mu_c_orig)
 
 	print "Iter %s" % i
 	print (pn,pc)
