@@ -193,14 +193,14 @@ class ChangeImage(object):
         numerator = np.sum(self.diff, axis=0)
         self.alpha = numerator / (self.coef * self.ros)
 
-    def getLimits(self, middle, alpha):
+    def getLimits(self, alpha):
 
         """
             Get initial limits for classes
 
         """
 
-        #middle = (self.ros.max() - self.ros.min()) / 2
+        middle = (self.ros.max() - self.ros.min()) / 2
         self.tn, self.tc = middle - alpha, middle + alpha
 
     def getInitialParams(self, numpyArray, t, lower=False):

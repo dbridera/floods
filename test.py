@@ -26,7 +26,7 @@ t.getAlphaMatrix()
 t.fixRos()
 
 
-umbral = 0.13573749839952443
+umbral = 0.13573938630920532
 #t.ros[np.where(t.ros>=0.021913564571751486)] = 1
 #t.ros[np.where(t.ros<umbral)] = 0
 
@@ -64,16 +64,15 @@ print "termino fit"
 labels = ms.labels_
 print labels.shape
 
-
 #clus = ms.predict(cambios)
 print "termino predecir"
-#print "shape"
-
+# "shape"
+print labels.shape
 pa = labels.reshape(rows,col)
 
 print pa.shape
 #saveTiff(t.ros, "ros", img1)
-#saveTiff(pa, "class", img1)
+saveTiff(pa, "classification_6", img1)
 
 
 #print clus.reshape(2,1000)

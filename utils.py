@@ -120,6 +120,23 @@ def histogram(array, bins):
 def saveTiff(array, name, source):
 	gdal_array.SaveArray(array.astype("int"), name, "GTiff", gdal.Open(source))
 
+def stats(img1, verdad, clus):
+
+	res = img1[np.where(verdad == clus)]
+
+	unique, counts = np.unique(res, return_counts=True)
+	dict_count = dict(zip(unique, counts))
+
+	true_pos = dict_count[clus]
+
+	missed = len(res) - true_pos
+
+	total = len(img1[np.where(img1 == clus)])
+
+	false_pos = total - true_pos
+
+	return true_pos, false_pos, missed, total
+
 def test():
 	""" Matrix examples	"""
 	a = np.array([ [ [6,7,8] , [9,11,15] ] , [ [11,12,13] , [14,15,16] ]]).astype('float')

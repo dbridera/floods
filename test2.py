@@ -21,13 +21,13 @@ t.ros[np.where(t.ros ==0)]= -1
 
 t.fixRos()
 
-"""
-t.ros[np.where(t.ros>=0.13573749839952443)] = 1
-t.ros[np.where(t.ros<0.13573749839952443)] = None
+
+t.ros[np.where(t.ros>=0.13573938630920532)] = 1
+t.ros[np.where(t.ros<0.13573938630920532)] = None
 
 saveTiff(t.ros, "l8/filtrados/sample1_cambios", img1)
 exit()
-"""
+
 
 
 flatt = t.ros[np.where(t.ros != t.ros.min())]
